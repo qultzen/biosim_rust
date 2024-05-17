@@ -1,5 +1,6 @@
-use std::collections::HashMap;
 mod island;
+use island::Island;
+use std::error::Error;
 pub struct Config {
     island_map: String,
     ini_pop: Vec<((u32, u32), String, u32)>,
@@ -15,6 +16,11 @@ impl Config {
             ini_pop,
         })
     }
+}
+pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    let _ = Island::build(&config.island_map)?;
+
+    Ok(())
 }
 
 #[cfg(test)]

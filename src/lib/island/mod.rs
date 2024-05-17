@@ -1,7 +1,7 @@
 use std::{collections::HashMap, error::Error};
 mod cell;
 use cell::Cell;
-mod island {
+mod island_params {
     pub struct Parameters {
         pub allowed_cells: [char; 4],
     }
@@ -11,7 +11,7 @@ mod island {
     };
 }
 
-use island::ISLAND;
+use island_params::ISLAND;
 
 pub struct Island<'a> {
     raw_str: String,
