@@ -1,6 +1,5 @@
 use std::collections::HashMap;
-
-
+mod island;
 pub struct Config {
     island_map: String,
     ini_pop: Vec<((u32, u32), String, u32)>,
