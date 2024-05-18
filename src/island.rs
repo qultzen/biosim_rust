@@ -1,5 +1,6 @@
 use crate::cell::{Cell, DESERT, HIGHLAND, LOWLAND, WATER};
 use std::{collections::HashMap, error::Error};
+
 mod island_params {
     pub struct Parameters {
         pub allowed_cells: [char; 4],
@@ -167,8 +168,6 @@ WWW";
         .collect();
 
         let expected = HashMap::from(map_vec);
-
-        println!("{:#?}", expected);
 
         assert_eq!(island_map, expected, "Hashmap of map is not equal");
     }
