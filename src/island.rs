@@ -1,6 +1,5 @@
+use crate::cell::{Cell, DESERT, HIGHLAND, LOWLAND, WATER};
 use std::{collections::HashMap, error::Error};
-mod cell;
-use cell::Cell;
 mod island_params {
     pub struct Parameters {
         pub allowed_cells: [char; 4],
@@ -84,14 +83,14 @@ impl Island<'_> {
             .flat_map(|(y, line)| {
                 line.chars()
                     .enumerate()
-                    .map(move |(x, cell)| ((x as u32, y as u32), cell::from_char(cell)))
+                    .map(move |(x, cell)| ((x as u32, y as u32), crate::cell::from_char(cell)))
             })
             .collect()
     }
 }
 
 #[cfg(test)]
-mod tests {
+mod island_tests {
     use super::*;
 
     #[test]
