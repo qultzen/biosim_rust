@@ -136,6 +136,40 @@ WWW";
 
     #[test]
     fn test_map_dict() {
-        //TODO
+        let input_str = "
+        WWWWW
+        WDHLW
+        WWWWW";
+
+        let island = Island::build(input_str).unwrap();
+
+        let island_map = island.map().clone();
+
+        let map_vec: HashMap<(u32, u32), Cell> = [
+            ((0, 0), WATER),
+            ((1, 0), WATER),
+            ((2, 0), WATER),
+            ((3, 0), WATER),
+            ((4, 0), WATER),
+            ((0, 1), WATER),
+            ((1, 1), DESERT),
+            ((2, 1), HIGHLAND),
+            ((3, 1), LOWLAND),
+            ((4, 1), WATER),
+            ((0, 2), WATER),
+            ((1, 2), WATER),
+            ((2, 2), WATER),
+            ((3, 2), WATER),
+            ((4, 2), WATER),
+        ]
+        .iter()
+        .cloned()
+        .collect();
+
+        let expected = HashMap::from(map_vec);
+
+        println!("{:#?}", expected);
+
+        assert_eq!(island_map, expected, "Hashmap of map is not equal");
     }
 }

@@ -1,3 +1,4 @@
+pub mod animal;
 pub mod cell;
 pub mod island;
 
