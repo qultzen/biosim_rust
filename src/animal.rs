@@ -1,4 +1,5 @@
 mod animals_params {
+    #[derive(PartialEq, Debug)]
     pub struct Parameters {
         pub w_birth: f32,
         pub mu: f32,
@@ -14,7 +15,7 @@ mod animals_params {
         pub xi: f32,
         pub omega: f32,
         pub F: f32,
-        pub DeltaPhiMax: f32,
+        pub delta_phi_max: f32,
     }
 
     pub const HERBIVORE: Parameters = Parameters {
@@ -32,7 +33,7 @@ mod animals_params {
         xi: 1.2,
         omega: 0.4,
         F: 10.0,
-        DeltaPhiMax: 0.0,
+        delta_phi_max: 0.0,
     };
 
     pub const CARNIVORE: Parameters = Parameters {
@@ -50,8 +51,99 @@ mod animals_params {
         xi: 1.1,
         omega: 0.8,
         F: 10.0,
-        DeltaPhiMax: 10.0,
+        delta_phi_max: 10.0,
     };
+
+    #[derive(PartialEq, Debug)]
+    pub struct Stats {
+        pub age: u32,
+        pub weight: f32,
+    }
+
+    impl Stats {
+        pub fn new_default() -> Stats {
+            Stats {
+                age: 5,
+                weight: 20.0,
+            }
+        }
+    }
 }
 
-use animals_params::{CARNIVORE, HERBIVORE};
+use animals_params::{Parameters, Stats, CARNIVORE, HERBIVORE};
+
+pub trait AnimalTrait {
+    fn procreate(&self, count_in_cell: u32);
+
+    fn calc_fitness(&self);
+
+    fn update_fitness(&self);
+
+    fn aging(&self);
+
+    fn loss_of_weight(&self);
+
+    fn death(&self);
+
+    fn migrate(&self);
+}
+
+#[derive(PartialEq, Debug)]
+pub struct Herbivore {
+    params: Parameters,
+    stats: Stats,
+}
+
+impl Herbivore {
+    pub fn new() -> Herbivore {
+        Herbivore {
+            params: HERBIVORE,
+            stats: Stats::new_default(),
+        }
+    }
+}
+
+#[derive(PartialEq, Debug)]
+pub struct Carnivore {
+    params: Parameters,
+    stats: Stats,
+}
+
+impl Carnivore {
+    pub fn new() -> Carnivore {
+        Carnivore {
+            params: CARNIVORE,
+            stats: Stats::new_default(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn create_herb() {
+        let expected = Herbivore::new();
+
+        assert_eq!(
+            expected,
+            Herbivore {
+                params: HERBIVORE,
+                stats: Stats::new_default()
+            }
+        )
+    }
+    #[test]
+    fn create_carn() {
+        let expected = Carnivore::new();
+
+        assert_eq!(
+            expected,
+            Carnivore {
+                params: CARNIVORE,
+                stats: Stats::new_default()
+            }
+        )
+    }
+}
