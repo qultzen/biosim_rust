@@ -58,6 +58,8 @@ mod animals_params {
     pub struct Stats {
         pub age: u32,
         pub weight: f32,
+        pub fitness: f32,
+        pub alive: bool,
     }
 
     impl Stats {
@@ -65,56 +67,204 @@ mod animals_params {
             Stats {
                 age: 5,
                 weight: 20.0,
+                fitness: 0.0,
+                alive: true,
+            }
+        }
+
+        pub fn from(age: u32, weight: f32) -> Stats {
+            Stats {
+                age,
+                weight,
+                fitness: 0.0,
+                alive: true,
             }
         }
     }
 }
 
 use animals_params::{Parameters, Stats, CARNIVORE, HERBIVORE};
+use rand::Rng;
+use rand_distr::{Distribution, LogNormal};
 
 pub trait AnimalTrait {
-    fn procreate(&self, count_in_cell: u32);
+    fn get_birthweight(&mut self, count_in_cell: u32) -> Option<f32> {
+        let zeta = self.params().zeta;
+        let w_birth = self.params().w_birth;
+        let sigma_birth = self.params().sigma_birth;
+        let gamma = self.params().gamma;
+        let xi = self.params().xi;
 
-    fn calc_fitness(&self);
+        // Calcuate probability of procreation
+        let offspring_value = zeta * (w_birth * sigma_birth);
 
-    fn update_fitness(&self);
+        if self.stats().weight < offspring_value {
+            return None;
+        }
 
-    fn aging(&self);
+        let probability_of_procreation =
+            f32::min(1.0, gamma * self.stats().fitness * count_in_cell as f32);
 
-    fn loss_of_weight(&self);
+        if rand::thread_rng().gen::<f32>() > probability_of_procreation {
+            return None;
+        }
 
-    fn death(&self);
+        let mu = f32::ln(w_birth.powi(2) / f32::sqrt(w_birth.powi(2) + sigma_birth.powi(2)));
+        let sigma = f32::sqrt(f32::ln(1.0 + (sigma_birth.powi(2) / w_birth.powi(2))));
 
-    fn migrate(&self);
+        let log_normal = LogNormal::new(mu, sigma).unwrap();
+        let newborn_weight = log_normal.sample(&mut rand::thread_rng());
+
+        // check if parent has enought weight to give birth
+        let parent_loss = xi * newborn_weight;
+
+        if self.stats().weight < parent_loss {
+            return None;
+        }
+
+        self.stats().weight -= parent_loss;
+        self.update_fitness();
+
+        return Some(newborn_weight);
+    }
+
+    fn calc_fitness(&mut self) -> f32 {
+        if self.stats().weight <= 0.0 {
+            return 0.0;
+        }
+
+        let phi_weight = self.params().phi_weight;
+        let phi_age = self.params().phi_age;
+        let a_half = self.params().a_half;
+        let w_half = self.params().w_half;
+
+        let age_parameter = 1.0 / (1.0 + (phi_age * (self.stats().age as f32 - a_half).exp()));
+        let weight_parameter = 1.0 / (1.0 + (-phi_weight * (self.stats().weight - w_half).exp()));
+
+        return age_parameter * weight_parameter;
+    }
+
+    fn update_fitness(&mut self) {
+        self.stats().fitness = self.calc_fitness();
+    }
+
+    fn aging(&mut self) {
+        self.stats().age += 1;
+    }
+
+    fn loss_of_weight(&mut self) {
+        self.stats().weight -= self.params().eta * self.stats().weight;
+        self.update_fitness();
+    }
+
+    fn death(&mut self) {
+        if self.stats().weight <= 0.0 {
+            self.stats().alive = false;
+        }
+
+        let probability_of_death = self.params().omega * (1.0 - self.stats().fitness);
+
+        if rand::thread_rng().gen::<f32>() < probability_of_death {
+            self.stats().alive = false;
+        }
+    }
+
+    fn migrate(&mut self) -> bool {
+        let probability_of_migration = self.params().mu * self.stats().fitness;
+
+        if rand::thread_rng().gen::<f32>() < probability_of_migration {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    fn stats(&mut self) -> &mut Stats;
+
+    fn params(&self) -> &Parameters;
 }
 
 #[derive(PartialEq, Debug)]
-pub struct Herbivore {
-    params: Parameters,
+pub struct Herbivore<'a> {
+    params: &'a Parameters,
     stats: Stats,
 }
 
-impl Herbivore {
-    pub fn new() -> Herbivore {
+impl AnimalTrait for Herbivore<'_> {
+    fn stats(&mut self) -> &mut Stats {
+        &mut self.stats
+    }
+
+    fn params(&self) -> &Parameters {
+        &self.params
+    }
+}
+
+impl<'a> Herbivore<'a> {
+    pub fn new() -> Herbivore<'a> {
+        let stats = Stats::new_default();
+        // update stats.fitness before init
         Herbivore {
-            params: HERBIVORE,
+            params: &HERBIVORE,
             stats: Stats::new_default(),
         }
+    }
+
+    pub fn from(stats: Stats) -> Herbivore<'a> {
+        Herbivore {
+            params: &HERBIVORE,
+            stats,
+        }
+    }
+
+    pub fn procreate(&mut self, count_in_cell: u32) -> Option<Self> {
+        if let Some(newborn_weight) = self.get_birthweight(count_in_cell) {
+            let stats = Stats::from(0, newborn_weight);
+            return Some(Herbivore::from(stats));
+        }
+
+        None
     }
 }
 
 #[derive(PartialEq, Debug)]
-pub struct Carnivore {
-    params: Parameters,
+pub struct Carnivore<'a> {
+    params: &'a Parameters,
     stats: Stats,
 }
 
-impl Carnivore {
-    pub fn new() -> Carnivore {
+impl AnimalTrait for Carnivore<'_> {
+    fn stats(&mut self) -> &mut Stats {
+        &mut self.stats
+    }
+
+    fn params(&self) -> &Parameters {
+        &self.params
+    }
+}
+
+impl<'a> Carnivore<'a> {
+    pub fn new() -> Carnivore<'a> {
         Carnivore {
-            params: CARNIVORE,
+            params: &CARNIVORE,
             stats: Stats::new_default(),
         }
+    }
+
+    pub fn from(stats: Stats) -> Carnivore<'a> {
+        Carnivore {
+            params: &HERBIVORE,
+            stats,
+        }
+    }
+
+    pub fn procreate(&mut self, count_in_cell: u32) -> Option<Self> {
+        if let Some(newborn_weight) = self.get_birthweight(count_in_cell) {
+            let stats = Stats::from(0, newborn_weight);
+            return Some(Carnivore::from(stats));
+        }
+
+        None
     }
 }
 
@@ -129,7 +279,7 @@ mod test {
         assert_eq!(
             expected,
             Herbivore {
-                params: HERBIVORE,
+                params: &HERBIVORE,
                 stats: Stats::new_default()
             }
         )
@@ -141,7 +291,7 @@ mod test {
         assert_eq!(
             expected,
             Carnivore {
-                params: CARNIVORE,
+                params: &CARNIVORE,
                 stats: Stats::new_default()
             }
         )
