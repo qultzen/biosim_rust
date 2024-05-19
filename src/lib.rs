@@ -1,6 +1,7 @@
 pub mod animal;
 pub mod cell;
 pub mod island;
+pub mod simulation;
 
 use island::Island;
 use std::error::Error;

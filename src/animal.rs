@@ -14,7 +14,7 @@ mod animals_params {
         pub zeta: f32,
         pub xi: f32,
         pub omega: f32,
-        pub F: f32,
+        pub f: f32,
         pub delta_phi_max: f32,
     }
 
@@ -32,7 +32,7 @@ mod animals_params {
         zeta: 3.5,
         xi: 1.2,
         omega: 0.4,
-        F: 10.0,
+        f: 10.0,
         delta_phi_max: 0.0,
     };
 
@@ -50,7 +50,7 @@ mod animals_params {
         zeta: 3.5,
         xi: 1.1,
         omega: 0.8,
-        F: 10.0,
+        f: 50.0,
         delta_phi_max: 10.0,
     };
 
@@ -87,6 +87,10 @@ use animals_params::{Parameters, Stats, CARNIVORE, HERBIVORE};
 use rand::Rng;
 use rand_distr::{Distribution, LogNormal};
 
+fn random() -> f32 {
+    rand::thread_rng().gen::<f32>()
+}
+
 pub trait AnimalTrait {
     fn get_birthweight(&mut self, count_in_cell: u32) -> Option<f32> {
         let zeta = self.params().zeta;
@@ -105,7 +109,7 @@ pub trait AnimalTrait {
         let probability_of_procreation =
             f32::min(1.0, gamma * self.stats().fitness * count_in_cell as f32);
 
-        if rand::thread_rng().gen::<f32>() > probability_of_procreation {
+        if random() > probability_of_procreation {
             return None;
         }
 
@@ -164,7 +168,7 @@ pub trait AnimalTrait {
 
         let probability_of_death = self.params().omega * (1.0 - self.stats().fitness);
 
-        if rand::thread_rng().gen::<f32>() < probability_of_death {
+        if random() < probability_of_death {
             self.stats().alive = false;
         }
     }
@@ -172,7 +176,7 @@ pub trait AnimalTrait {
     fn migrate(&mut self) -> bool {
         let probability_of_migration = self.params().mu * self.stats().fitness;
 
-        if rand::thread_rng().gen::<f32>() < probability_of_migration {
+        if random() < probability_of_migration {
             return true;
         } else {
             return false;
@@ -225,6 +229,19 @@ impl<'a> Herbivore<'a> {
 
         None
     }
+
+    pub fn feeding(&mut self, fodder: f32) -> f32 {
+        let amount_eaten;
+        if fodder < self.params().f {
+            amount_eaten = fodder;
+        } else {
+            amount_eaten = self.params().f;
+        }
+
+        self.stats().weight -= amount_eaten * self.params().beta;
+        self.update_fitness();
+        amount_eaten
+    }
 }
 
 #[derive(PartialEq, Debug)]
@@ -265,6 +282,48 @@ impl<'a> Carnivore<'a> {
         }
 
         None
+    }
+
+    pub fn feeding(&mut self, herb_sorted_lowest_fitness: Vec<&mut Herbivore>) {
+        let delta_phi_max = self.params().delta_phi_max;
+        let mut amount_eaten: f32 = 0.0;
+
+        for herbivore in herb_sorted_lowest_fitness {
+            if amount_eaten >= self.params().f {
+                break;
+            }
+
+            let diff_fitness = self.stats().fitness - herbivore.stats.fitness;
+
+            if diff_fitness < 0.0 {
+                continue;
+            }
+
+            let probability_of_killing;
+            if 0.0 < diff_fitness && diff_fitness < delta_phi_max {
+                probability_of_killing = (diff_fitness) / delta_phi_max;
+            } else {
+                probability_of_killing = 1.0;
+            }
+
+            if random() >= probability_of_killing {
+                continue;
+            }
+
+            let desired_food = self.params.f - amount_eaten;
+            let eating;
+
+            if herbivore.stats.weight > desired_food {
+                eating = desired_food;
+            } else {
+                eating = herbivore.stats.weight;
+            }
+
+            self.stats.weight += eating * self.params().beta;
+            herbivore.stats.alive = false;
+            self.update_fitness();
+            amount_eaten += eating;
+        }
     }
 }
 
