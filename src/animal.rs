@@ -1,5 +1,11 @@
 mod animals_params {
     #[derive(PartialEq, Debug)]
+    pub enum Species {
+        Herbivore,
+        Carnivore,
+    }
+
+    #[derive(PartialEq, Debug)]
     pub struct Parameters {
         pub w_birth: f32,
         pub mu: f32,
@@ -83,7 +89,7 @@ mod animals_params {
     }
 }
 
-use animals_params::{Parameters, Stats, CARNIVORE, HERBIVORE};
+use animals_params::{Parameters, Species, Stats, CARNIVORE, HERBIVORE};
 use rand::Rng;
 use rand_distr::{Distribution, LogNormal};
 
@@ -190,6 +196,7 @@ pub trait AnimalTrait {
 
 #[derive(PartialEq, Debug)]
 pub struct Herbivore<'a> {
+    species: Species,
     params: &'a Parameters,
     stats: Stats,
 }
@@ -209,6 +216,7 @@ impl<'a> Herbivore<'a> {
         let stats = Stats::new_default();
         // update stats.fitness before init
         Herbivore {
+            species: Species::Herbivore,
             params: &HERBIVORE,
             stats: Stats::new_default(),
         }
@@ -216,6 +224,7 @@ impl<'a> Herbivore<'a> {
 
     pub fn from(stats: Stats) -> Herbivore<'a> {
         Herbivore {
+            species: Species::Herbivore,
             params: &HERBIVORE,
             stats,
         }
@@ -246,6 +255,7 @@ impl<'a> Herbivore<'a> {
 
 #[derive(PartialEq, Debug)]
 pub struct Carnivore<'a> {
+    species: Species,
     params: &'a Parameters,
     stats: Stats,
 }
@@ -263,6 +273,7 @@ impl AnimalTrait for Carnivore<'_> {
 impl<'a> Carnivore<'a> {
     pub fn new() -> Carnivore<'a> {
         Carnivore {
+            species: Species::Carnivore,
             params: &CARNIVORE,
             stats: Stats::new_default(),
         }
@@ -270,6 +281,7 @@ impl<'a> Carnivore<'a> {
 
     pub fn from(stats: Stats) -> Carnivore<'a> {
         Carnivore {
+            species: Species::Carnivore,
             params: &HERBIVORE,
             stats,
         }
@@ -338,6 +350,7 @@ mod test {
         assert_eq!(
             expected,
             Herbivore {
+                species: Species::Herbivore,
                 params: &HERBIVORE,
                 stats: Stats::new_default()
             }
@@ -350,6 +363,7 @@ mod test {
         assert_eq!(
             expected,
             Carnivore {
+                species: Species::Carnivore,
                 params: &CARNIVORE,
                 stats: Stats::new_default()
             }
