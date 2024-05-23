@@ -66,6 +66,7 @@ mod animals_params {
         pub weight: f32,
         pub fitness: f32,
         pub alive: bool,
+        pub move_to: Option<((u32, u32))>,
     }
 
     impl Stats {
@@ -75,6 +76,7 @@ mod animals_params {
                 weight: 20.0,
                 fitness: 0.0,
                 alive: true,
+                move_to: None,
             }
         }
 
@@ -84,6 +86,7 @@ mod animals_params {
                 weight,
                 fitness: 0.0,
                 alive: true,
+                move_to: None,
             }
         }
     }
@@ -98,7 +101,7 @@ fn random() -> f32 {
 }
 
 pub trait AnimalTrait {
-    fn get_birthweight(&mut self, count_in_cell: u32) -> Option<f32> {
+    fn get_birthweight(&mut self, count_in_cell: usize) -> Option<f32> {
         let zeta = self.params().zeta;
         let w_birth = self.params().w_birth;
         let sigma_birth = self.params().sigma_birth;
@@ -248,7 +251,7 @@ impl Herbivore {
         herb
     }
 
-    pub fn procreate(&mut self, count_in_cell: u32) -> Option<Self> {
+    pub fn procreation(&mut self, count_in_cell: usize) -> Option<Self> {
         if let Some(newborn_weight) = self.get_birthweight(count_in_cell) {
             let stats = Stats::from(0, newborn_weight);
             return Some(Herbivore::from(stats));
@@ -315,7 +318,7 @@ impl Carnivore {
         carn
     }
 
-    pub fn procreate(&mut self, count_in_cell: u32) -> Option<Self> {
+    pub fn procreation(&mut self, count_in_cell: usize) -> Option<Self> {
         if let Some(newborn_weight) = self.get_birthweight(count_in_cell) {
             let stats = Stats::from(0, newborn_weight);
             return Some(Carnivore::from(stats));

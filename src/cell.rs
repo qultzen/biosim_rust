@@ -146,8 +146,7 @@ impl<'a> Cell {
         carnivores.iter_mut().for_each(|carn| carn.loss_of_weight());
     }
 
-    pub fn get_random_neighboring_cell(&self) -> Option<(u32, u32)> {
-        let loc = self.loc.clone();
+    pub fn get_random_neighboring_cell(loc: (u32, u32)) -> Option<(u32, u32)> {
         let mut rng = rand::thread_rng();
 
         // move north, east, south, west
@@ -165,33 +164,57 @@ impl<'a> Cell {
         Some((x as u32, y as u32))
     }
 
-    pub fn get_moving_animals(
-        &self,
-    ) -> (
-        Vec<(&Herbivore, (u32, u32), (u32, u32))>,
-        Vec<(&Carnivore, (u32, u32), (u32, u32))>,
-    ) {
-        let mut moving_herbs = Vec::new();
-        let mut moving_carns = Vec::new();
+    pub fn get_moving_animals(&mut self) {
         let current_loc = self.loc.clone();
 
-        for herb in self.fauna.as_ref().unwrap().herbivore.iter() {
+        for herb in self.fauna.as_mut().unwrap().herbivore.iter_mut() {
             if herb.migrate() {
-                if let Some(new_loc) = self.get_random_neighboring_cell() {
-                    moving_herbs.push((herb, current_loc, new_loc));
+                let loc_option: Option<(u32, u32)>;
+                if let Some(new_loc) = Cell::get_random_neighboring_cell(current_loc) {
+                    loc_option = Some(new_loc);
+                } else {
+                    loc_option = None;
                 }
+                herb.stats_as_mut().move_to = loc_option;
             }
         }
 
-        for carn in self.fauna.as_ref().unwrap().carnivore.iter() {
+        for carn in self.fauna.as_mut().unwrap().carnivore.iter_mut() {
             if carn.migrate() {
-                if let Some(new_loc) = self.get_random_neighboring_cell() {
-                    moving_carns.push((carn, current_loc, new_loc));
+                let loc_option;
+                if let Some(new_loc) = Cell::get_random_neighboring_cell(current_loc) {
+                    loc_option = Some(new_loc);
+                } else {
+                    loc_option = None;
                 }
+                carn.stats_as_mut().move_to = loc_option;
             }
         }
+    }
 
-        (moving_herbs, moving_carns)
+    pub fn add_newborns(&mut self) {
+        let herbs = &mut self.fauna.as_mut().unwrap().herbivore;
+        let mut newborns = Vec::new();
+
+        let herb_count = herbs.len();
+
+        for herb in herbs.iter_mut() {
+            if let Some(newborn) = herb.procreation(herb_count) {
+                newborns.push(newborn);
+            }
+        }
+        herbs.extend(newborns);
+
+        let carns = &mut self.fauna.as_mut().unwrap().carnivore;
+        let mut newborns = Vec::new();
+
+        let carn_count = carns.len();
+
+        for carn in carns.iter_mut() {
+            if let Some(newborn) = carn.procreation(carn_count) {
+                newborns.push(newborn);
+            }
+        }
     }
 }
 
