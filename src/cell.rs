@@ -165,7 +165,31 @@ impl<'a> Cell {
         Some((x as u32, y as u32))
     }
 
-    //pub fn get_moving_animals(&mut self);
+    pub fn get_moving_animals(
+        &self,
+    ) -> (Vec<(&Herbivore, (u32, u32))>, Vec<(&Carnivore, (u32, u32))>) {
+        let mut moving_herbs = Vec::new();
+        let mut moving_carns = Vec::new();
+        let mut new_loc: (u32, u32);
+
+        for herb in self.fauna.as_ref().unwrap().herbivore.iter() {
+            if herb.migrate() {
+                if let Some(new_loc) = self.get_random_neighboring_cell() {
+                    moving_herbs.push((herb, new_loc));
+                }
+            }
+        }
+
+        for carn in self.fauna.as_ref().unwrap().carnivore.iter() {
+            if carn.migrate() {
+                if let Some(new_loc) = self.get_random_neighboring_cell() {
+                    moving_carns.push((carn, new_loc));
+                }
+            }
+        }
+
+        (moving_herbs, moving_carns)
+    }
 }
 
 pub fn water(loc: (u32, u32)) -> Cell {

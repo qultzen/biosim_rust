@@ -108,12 +108,14 @@ pub trait AnimalTrait {
         // Calcuate probability of procreation
         let offspring_value = zeta * (w_birth * sigma_birth);
 
-        if self.stats().weight < offspring_value {
+        if self.stats_as_ref().weight < offspring_value {
             return None;
         }
 
-        let probability_of_procreation =
-            f32::min(1.0, gamma * self.stats().fitness * count_in_cell as f32);
+        let probability_of_procreation = f32::min(
+            1.0,
+            gamma * self.stats_as_ref().fitness * count_in_cell as f32,
+        );
 
         if random() > probability_of_procreation {
             return None;
@@ -128,18 +130,18 @@ pub trait AnimalTrait {
         // check if parent has enought weight to give birth
         let parent_loss = xi * newborn_weight;
 
-        if self.stats().weight < parent_loss {
+        if self.stats_as_ref().weight < parent_loss {
             return None;
         }
 
-        self.stats().weight -= parent_loss;
+        self.stats_as_mut().weight -= parent_loss;
         self.update_fitness();
 
         return Some(newborn_weight);
     }
 
-    fn calc_fitness(&mut self) -> f32 {
-        if self.stats().weight <= 0.0 {
+    fn calc_fitness(&self) -> f32 {
+        if self.stats_as_ref().weight <= 0.0 {
             return 0.0;
         }
 
@@ -148,39 +150,41 @@ pub trait AnimalTrait {
         let a_half = self.params().a_half;
         let w_half = self.params().w_half;
 
-        let age_parameter = 1.0 / (1.0 + f32::exp(phi_age * (self.stats().age as f32 - a_half)));
-        let weight_parameter = 1.0 / (1.0 + f32::exp(-phi_weight * (self.stats().weight - w_half)));
+        let age_parameter =
+            1.0 / (1.0 + f32::exp(phi_age * (self.stats_as_ref().age as f32 - a_half)));
+        let weight_parameter =
+            1.0 / (1.0 + f32::exp(-phi_weight * (self.stats_as_ref().weight - w_half)));
 
         return age_parameter * weight_parameter;
     }
 
     fn update_fitness(&mut self) {
-        self.stats().fitness = self.calc_fitness();
+        self.stats_as_mut().fitness = self.calc_fitness();
     }
 
     fn aging(&mut self) {
-        self.stats().age += 1;
+        self.stats_as_mut().age += 1;
     }
 
     fn loss_of_weight(&mut self) {
-        self.stats().weight -= self.params().eta * self.stats().weight;
+        self.stats_as_mut().weight -= self.params().eta * self.stats_as_ref().weight;
         self.update_fitness();
     }
 
     fn death(&mut self) {
-        if self.stats().weight <= 0.0 {
-            self.stats().alive = false;
+        if self.stats_as_ref().weight <= 0.0 {
+            self.stats_as_mut().alive = false;
         }
 
-        let probability_of_death = self.params().omega * (1.0 - self.stats().fitness);
+        let probability_of_death = self.params().omega * (1.0 - self.stats_as_ref().fitness);
 
         if random() < probability_of_death {
-            self.stats().alive = false;
+            self.stats_as_mut().alive = false;
         }
     }
 
-    fn migrate(&mut self) -> bool {
-        let probability_of_migration = self.params().mu * self.stats().fitness;
+    fn migrate(&self) -> bool {
+        let probability_of_migration = self.params().mu * self.stats_as_ref().fitness;
 
         if random() < probability_of_migration {
             return true;
@@ -191,7 +195,9 @@ pub trait AnimalTrait {
 
     fn species(&self) -> Species;
 
-    fn stats(&mut self) -> &mut Stats;
+    fn stats_as_mut(&mut self) -> &mut Stats;
+
+    fn stats_as_ref(&self) -> &Stats;
 
     fn params(&self) -> &Parameters;
 }
@@ -203,8 +209,12 @@ pub struct Herbivore {
 }
 
 impl AnimalTrait for Herbivore {
-    fn stats(&mut self) -> &mut Stats {
+    fn stats_as_mut(&mut self) -> &mut Stats {
         &mut self.stats
+    }
+
+    fn stats_as_ref(&self) -> &Stats {
+        &self.stats
     }
 
     fn params(&self) -> &Parameters {
@@ -255,7 +265,7 @@ impl Herbivore {
             amount_eaten = self.params().f;
         }
 
-        self.stats().weight -= amount_eaten * self.params().beta;
+        self.stats_as_mut().weight -= amount_eaten * self.params().beta;
         self.update_fitness();
         amount_eaten
     }
@@ -268,8 +278,12 @@ pub struct Carnivore {
 }
 
 impl AnimalTrait for Carnivore {
-    fn stats(&mut self) -> &mut Stats {
+    fn stats_as_mut(&mut self) -> &mut Stats {
         &mut self.stats
+    }
+
+    fn stats_as_ref(&self) -> &Stats {
+        &self.stats
     }
 
     fn params(&self) -> &Parameters {
@@ -319,7 +333,7 @@ impl Carnivore {
                 break;
             }
 
-            let diff_fitness = self.stats().fitness - herbivore.stats.fitness;
+            let diff_fitness = self.stats_as_ref().fitness - herbivore.stats.fitness;
 
             if diff_fitness < 0.0 {
                 continue;
