@@ -1,5 +1,5 @@
 mod animals_params {
-    #[derive(PartialEq, Debug)]
+    #[derive(PartialEq, Debug, Clone)]
     pub enum Species {
         Herbivore,
         Carnivore,
@@ -48,7 +48,7 @@ mod animals_params {
         sigma_birth: 1.0,
         beta: 0.75,
         eta: 0.125,
-        a_half: 4.0,
+        a_half: 40.0,
         phi_age: 0.3,
         w_half: 4.0,
         phi_weight: 0.4,
@@ -60,7 +60,7 @@ mod animals_params {
         delta_phi_max: 10.0,
     };
 
-    #[derive(PartialEq, Debug)]
+    #[derive(PartialEq, Debug, Clone)]
     pub struct Stats {
         pub age: u32,
         pub weight: f32,
@@ -89,7 +89,7 @@ mod animals_params {
     }
 }
 
-use animals_params::{Parameters, Species, Stats, CARNIVORE, HERBIVORE};
+pub use animals_params::{Parameters, Species, Stats, CARNIVORE, HERBIVORE};
 use rand::Rng;
 use rand_distr::{Distribution, LogNormal};
 
@@ -148,8 +148,8 @@ pub trait AnimalTrait {
         let a_half = self.params().a_half;
         let w_half = self.params().w_half;
 
-        let age_parameter = 1.0 / (1.0 + (phi_age * (self.stats().age as f32 - a_half).exp()));
-        let weight_parameter = 1.0 / (1.0 + (-phi_weight * (self.stats().weight - w_half).exp()));
+        let age_parameter = 1.0 / (1.0 + f32::exp(phi_age * (self.stats().age as f32 - a_half)));
+        let weight_parameter = 1.0 / (1.0 + f32::exp(-phi_weight * (self.stats().weight - w_half)));
 
         return age_parameter * weight_parameter;
     }
@@ -189,16 +189,18 @@ pub trait AnimalTrait {
         }
     }
 
+    fn species(&self) -> Species;
+
     fn stats(&mut self) -> &mut Stats;
 
     fn params(&self) -> &Parameters;
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Herbivore<'a> {
-    species: Species,
+    pub species: Species,
     params: &'a Parameters,
-    stats: Stats,
+    pub stats: Stats,
 }
 
 impl AnimalTrait for Herbivore<'_> {
@@ -209,25 +211,34 @@ impl AnimalTrait for Herbivore<'_> {
     fn params(&self) -> &Parameters {
         &self.params
     }
+
+    fn species(&self) -> Species {
+        self.species.clone()
+    }
 }
 
 impl<'a> Herbivore<'a> {
     pub fn new() -> Herbivore<'a> {
         let stats = Stats::new_default();
         // update stats.fitness before init
-        Herbivore {
+        let mut herb = Herbivore {
             species: Species::Herbivore,
             params: &HERBIVORE,
             stats: Stats::new_default(),
-        }
+        };
+        herb.update_fitness();
+        herb
     }
 
     pub fn from(stats: Stats) -> Herbivore<'a> {
-        Herbivore {
+        let mut herb = Herbivore {
             species: Species::Herbivore,
             params: &HERBIVORE,
             stats,
-        }
+        };
+
+        herb.update_fitness();
+        herb
     }
 
     pub fn procreate(&mut self, count_in_cell: u32) -> Option<Self> {
@@ -253,11 +264,11 @@ impl<'a> Herbivore<'a> {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Carnivore<'a> {
-    species: Species,
+    pub species: Species,
     params: &'a Parameters,
-    stats: Stats,
+    pub stats: Stats,
 }
 
 impl AnimalTrait for Carnivore<'_> {
@@ -268,23 +279,32 @@ impl AnimalTrait for Carnivore<'_> {
     fn params(&self) -> &Parameters {
         &self.params
     }
+
+    fn species(&self) -> Species {
+        self.species.clone()
+    }
 }
 
 impl<'a> Carnivore<'a> {
     pub fn new() -> Carnivore<'a> {
-        Carnivore {
+        let mut carn = Carnivore {
             species: Species::Carnivore,
             params: &CARNIVORE,
             stats: Stats::new_default(),
-        }
+        };
+        carn.update_fitness();
+        carn
     }
 
     pub fn from(stats: Stats) -> Carnivore<'a> {
-        Carnivore {
+        let mut carn = Carnivore {
             species: Species::Carnivore,
             params: &HERBIVORE,
             stats,
-        }
+        };
+
+        carn.update_fitness();
+        carn
     }
 
     pub fn procreate(&mut self, count_in_cell: u32) -> Option<Self> {
@@ -296,7 +316,7 @@ impl<'a> Carnivore<'a> {
         None
     }
 
-    pub fn feeding(&mut self, herb_sorted_lowest_fitness: Vec<&mut Herbivore>) {
+    pub fn feeding(&mut self, herb_sorted_lowest_fitness: &mut Vec<Herbivore>) {
         let delta_phi_max = self.params().delta_phi_max;
         let mut amount_eaten: f32 = 0.0;
 
@@ -340,33 +360,89 @@ impl<'a> Carnivore<'a> {
 }
 
 #[cfg(test)]
-mod test {
+mod test_creation {
     use super::*;
 
     #[test]
     fn create_herb() {
         let expected = Herbivore::new();
 
-        assert_eq!(
-            expected,
-            Herbivore {
-                species: Species::Herbivore,
-                params: &HERBIVORE,
-                stats: Stats::new_default()
-            }
-        )
+        let mut result = Herbivore {
+            species: Species::Herbivore,
+            params: &HERBIVORE,
+            stats: Stats::new_default(),
+        };
+        result.update_fitness();
+
+        assert_eq!(expected, result)
     }
     #[test]
     fn create_carn() {
         let expected = Carnivore::new();
 
-        assert_eq!(
-            expected,
-            Carnivore {
-                species: Species::Carnivore,
-                params: &CARNIVORE,
-                stats: Stats::new_default()
-            }
-        )
+        let mut result = Carnivore {
+            species: Species::Carnivore,
+            params: &CARNIVORE,
+            stats: Stats::new_default(),
+        };
+        result.update_fitness();
+
+        assert_eq!(expected, result)
+    }
+}
+
+#[cfg(test)]
+mod test_attributes {
+    // test the rest of the methods
+    use super::*;
+
+    #[test]
+    fn test_age() {
+        let mut herb = Herbivore::new();
+        herb.aging();
+        assert_eq!(herb.stats.age, 6);
+
+        let mut carn = Carnivore::new();
+        carn.aging();
+        assert_eq!(carn.stats.age, 6);
+    }
+
+    #[test]
+    fn test_loss_of_weight() {
+        let mut herb = Herbivore::new();
+        herb.stats.weight = 5.0;
+        herb.loss_of_weight();
+
+        // weight started as 5.0
+        assert_eq!(herb.stats.weight, 4.75);
+
+        let mut carn = Carnivore::new();
+        carn.stats.weight = 5.0;
+        carn.loss_of_weight();
+
+        // weight started as 5.0
+        assert_eq!(carn.stats.weight, 4.375);
+    }
+
+    #[test]
+    fn feeding_animal() {
+        let mut herb = Herbivore::new();
+        herb.stats.weight = 10.0;
+        herb.feeding(1.0);
+
+        assert_eq!(herb.stats.weight, 9.1);
+
+        herb.stats.fitness = 0.01;
+
+        let mut herbs = vec![herb];
+
+        let mut carn = Carnivore::new();
+        carn.stats.weight = 20.0;
+        carn.stats.fitness = 20.0;
+        carn.feeding(&mut herbs);
+
+        println!("{:#?}", herbs);
+
+        assert_eq!(carn.stats.weight, 26.825);
     }
 }
