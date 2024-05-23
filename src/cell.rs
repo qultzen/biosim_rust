@@ -28,6 +28,7 @@ pub enum CellType {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Cell<'a> {
     name: CellType,
+    pub loc: (u32, u32),
     pub fauna: Option<Fauna<'a>>,
     pub fodder: f32,
     f_max: f32,
@@ -145,7 +146,8 @@ impl<'a> Cell<'a> {
         carnivores.iter_mut().for_each(|carn| carn.loss_of_weight());
     }
 
-    pub fn get_random_neighboring_cell(loc: (u32, u32)) -> Option<(u32, u32)> {
+    pub fn get_random_neighboring_cell(&self) -> Option<(u32, u32)> {
+        let loc = self.loc.clone();
         let mut rng = rand::thread_rng();
 
         // move north, east, south, west
@@ -162,39 +164,45 @@ impl<'a> Cell<'a> {
 
         Some((x as u32, y as u32))
     }
+
+    //pub fn get_moving_animals(&mut self);
 }
 
-pub fn water() -> Cell<'static> {
+pub fn water(loc: (u32, u32)) -> Cell<'static> {
     Cell {
         name: CellType::Water,
+        loc: (0, 0),
         fauna: None,
         fodder: 0.0,
         f_max: 0.0,
     }
 }
 
-pub fn desert() -> Cell<'static> {
+pub fn desert(loc: (u32, u32)) -> Cell<'static> {
     Cell {
         name: CellType::Desert,
         fauna: Some(Fauna::new()),
+        loc: (0, 0),
         fodder: 0.0,
         f_max: 0.0,
     }
 }
 
-pub fn lowland() -> Cell<'static> {
+pub fn lowland(loc: (u32, u32)) -> Cell<'static> {
     Cell {
         name: CellType::Lowland,
         fauna: Some(Fauna::new()),
+        loc: (0, 0),
         fodder: 800.0,
         f_max: 800.0,
     }
 }
 
-pub fn highland() -> Cell<'static> {
+pub fn highland(loc: (u32, u32)) -> Cell<'static> {
     Cell {
         name: CellType::Highland,
         fauna: Some(Fauna::new()),
+        loc: (0, 0),
         fodder: 300.0,
         f_max: 300.0,
     }
@@ -204,6 +212,7 @@ pub fn from_char(c: char) -> Cell<'static> {
     match c {
         'W' => Cell {
             name: CellType::Water,
+            loc: (0, 0),
             fauna: None,
             fodder: 0.0,
             f_max: 0.0,
@@ -211,17 +220,20 @@ pub fn from_char(c: char) -> Cell<'static> {
         'D' => Cell {
             name: CellType::Desert,
             fauna: Some(Fauna::new()),
+            loc: (0, 0),
             fodder: 0.0,
             f_max: 0.0,
         },
         'L' => Cell {
             name: CellType::Lowland,
+            loc: (0, 0),
             fauna: Some(Fauna::new()),
             fodder: 800.0,
             f_max: 800.0,
         },
         'H' => Cell {
             name: CellType::Highland,
+            loc: (0, 0),
             fauna: Some(Fauna::new()),
             fodder: 300.0,
             f_max: 300.0,
@@ -236,7 +248,7 @@ mod test_cell_creation {
 
     #[test]
     fn test_herb_struct() {
-        let mut cell = lowland();
+        let mut cell = lowland((1, 1));
         cell.add_carn_struct(animal::Carnivore::new());
         cell.add_carn_struct(animal::Carnivore::new());
         cell.add_herb_struct(animal::Herbivore::new());
@@ -249,25 +261,25 @@ mod test_cell_creation {
 
     #[test]
     fn test_water() {
-        let cell = water();
+        let cell = water((1, 1));
         assert_eq!(cell.get_cell(), CellType::Water);
     }
 
     #[test]
     fn test_desert() {
-        let cell = desert();
+        let cell = desert((1, 1));
         assert_eq!(cell.get_cell(), CellType::Desert);
     }
 
     #[test]
     fn test_lowland() {
-        let cell = lowland();
+        let cell = lowland((1, 1));
         assert_eq!(cell.get_cell(), CellType::Lowland);
     }
 
     #[test]
     fn test_highland() {
-        let cell = highland();
+        let cell = highland((1, 1));
         assert_eq!(cell.get_cell(), CellType::Highland);
     }
 
@@ -285,7 +297,7 @@ mod test_cell_methods {
     // test sort_herbivore_after_fitness
     #[test]
     fn test_sort_herbivore_after_fitness() {
-        let mut cell = lowland();
+        let mut cell = lowland((1, 1));
         let herb1 = Herbivore::new();
         let herb2 = Herbivore::new();
         let herb3 = Herbivore::new();
@@ -327,7 +339,7 @@ mod test_cell_methods {
     // test feed herbivores
     #[test]
     fn test_feed_herbivores() {
-        let mut cell = lowland();
+        let mut cell = lowland((1, 1));
         let herb1 = Herbivore::new();
         let herb2 = Herbivore::new();
         let herb3 = Herbivore::new();
@@ -353,7 +365,7 @@ mod test_cell_methods {
     // test feed carnivores
     #[test]
     fn test_feed_carnivores() {
-        let mut cell = lowland();
+        let mut cell = lowland((1, 1));
         let herb1 = Herbivore::new();
         let herb2 = Herbivore::new();
         let herb3 = Herbivore::new();
@@ -405,7 +417,7 @@ mod test_cell_methods {
     // test reset fodder
     #[test]
     fn test_reset_fodder() {
-        let mut cell = lowland();
+        let mut cell = lowland((1, 1));
         cell.fodder = 0.0;
         cell.reset_fodder();
 

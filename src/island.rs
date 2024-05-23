@@ -159,21 +159,21 @@ WWW";
         let island_map = island.map().clone();
 
         let map_vec: HashMap<(u32, u32), Cell> = [
-            ((0, 0), cell::water()),
-            ((1, 0), cell::water()),
-            ((2, 0), cell::water()),
-            ((3, 0), cell::water()),
-            ((4, 0), cell::water()),
-            ((0, 1), cell::water()),
-            ((1, 1), cell::desert()),
-            ((2, 1), cell::highland()),
-            ((3, 1), cell::lowland()),
-            ((4, 1), cell::water()),
-            ((0, 2), cell::water()),
-            ((1, 2), cell::water()),
-            ((2, 2), cell::water()),
-            ((3, 2), cell::water()),
-            ((4, 2), cell::water()),
+            ((0, 0), cell::water((0, 0))),
+            ((1, 0), cell::water((1, 0))),
+            ((2, 0), cell::water((2, 0))),
+            ((3, 0), cell::water((3, 0))),
+            ((4, 0), cell::water((4, 0))),
+            ((0, 1), cell::water((0, 1))),
+            ((1, 1), cell::desert((1, 1))),
+            ((2, 1), cell::highland((2, 1))),
+            ((3, 1), cell::lowland((3, 1))),
+            ((4, 1), cell::water((4, 1))),
+            ((0, 2), cell::water((0, 2))),
+            ((1, 2), cell::water((1, 2))),
+            ((2, 2), cell::water((2, 2))),
+            ((3, 2), cell::water((3, 2))),
+            ((4, 2), cell::water((4, 1))),
         ]
         .iter()
         .cloned()
