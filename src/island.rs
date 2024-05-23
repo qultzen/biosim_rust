@@ -89,9 +89,12 @@ impl Island<'_> {
             .iter()
             .enumerate()
             .flat_map(|(y, line)| {
-                line.chars()
-                    .enumerate()
-                    .map(move |(x, cell)| ((x as u32, y as u32), crate::cell::from_char(cell)))
+                line.chars().enumerate().map(move |(x, cell)| {
+                    (
+                        (x as u32, y as u32),
+                        crate::cell::from_char(cell, (x as u32, y as u32)),
+                    )
+                })
             })
             .collect()
     }
@@ -173,7 +176,7 @@ WWW";
             ((1, 2), cell::water((1, 2))),
             ((2, 2), cell::water((2, 2))),
             ((3, 2), cell::water((3, 2))),
-            ((4, 2), cell::water((4, 1))),
+            ((4, 2), cell::water((4, 2))),
         ]
         .iter()
         .cloned()

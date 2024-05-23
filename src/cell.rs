@@ -198,7 +198,7 @@ impl<'a> Cell {
 pub fn water(loc: (u32, u32)) -> Cell {
     Cell {
         name: CellType::Water,
-        loc: (0, 0),
+        loc,
         fauna: None,
         fodder: 0.0,
         f_max: 0.0,
@@ -209,7 +209,7 @@ pub fn desert(loc: (u32, u32)) -> Cell {
     Cell {
         name: CellType::Desert,
         fauna: Some(Fauna::new()),
-        loc: (0, 0),
+        loc,
         fodder: 0.0,
         f_max: 0.0,
     }
@@ -219,7 +219,7 @@ pub fn lowland(loc: (u32, u32)) -> Cell {
     Cell {
         name: CellType::Lowland,
         fauna: Some(Fauna::new()),
-        loc: (0, 0),
+        loc,
         fodder: 800.0,
         f_max: 800.0,
     }
@@ -229,17 +229,17 @@ pub fn highland(loc: (u32, u32)) -> Cell {
     Cell {
         name: CellType::Highland,
         fauna: Some(Fauna::new()),
-        loc: (0, 0),
+        loc,
         fodder: 300.0,
         f_max: 300.0,
     }
 }
 
-pub fn from_char(c: char) -> Cell {
+pub fn from_char(c: char, loc: (u32, u32)) -> Cell {
     match c {
         'W' => Cell {
             name: CellType::Water,
-            loc: (0, 0),
+            loc,
             fauna: None,
             fodder: 0.0,
             f_max: 0.0,
@@ -247,20 +247,20 @@ pub fn from_char(c: char) -> Cell {
         'D' => Cell {
             name: CellType::Desert,
             fauna: Some(Fauna::new()),
-            loc: (0, 0),
+            loc,
             fodder: 0.0,
             f_max: 0.0,
         },
         'L' => Cell {
             name: CellType::Lowland,
-            loc: (0, 0),
+            loc,
             fauna: Some(Fauna::new()),
             fodder: 800.0,
             f_max: 800.0,
         },
         'H' => Cell {
             name: CellType::Highland,
-            loc: (0, 0),
+            loc,
             fauna: Some(Fauna::new()),
             fodder: 300.0,
             f_max: 300.0,
@@ -312,7 +312,7 @@ mod test_cell_creation {
 
     #[test]
     fn test_from_char() {
-        let cell = from_char('W');
+        let cell = from_char('W', (1, 1));
         assert_eq!(cell.get_cell(), CellType::Water);
     }
 }
