@@ -1,15 +1,15 @@
 use crate::animal::{self, AnimalTrait, Carnivore, Herbivore, Species};
 use rand::prelude::SliceRandom;
 #[derive(Clone, Debug, PartialEq)]
-pub struct Fauna<'a> {
-    pub herbivore: Vec<Herbivore<'a>>,
-    pub carnivore: Vec<Carnivore<'a>>,
+pub struct Fauna {
+    pub herbivore: Vec<Herbivore>,
+    pub carnivore: Vec<Carnivore>,
 }
 
-impl<'a> Fauna<'a> {
-    pub const fn new() -> Fauna<'a> {
-        let herbivore = Vec::<Herbivore<'a>>::new();
-        let carnivore = Vec::<Carnivore<'a>>::new();
+impl Fauna {
+    pub const fn new() -> Fauna {
+        let herbivore = Vec::<Herbivore>::new();
+        let carnivore = Vec::<Carnivore>::new();
         Fauna {
             herbivore,
             carnivore,
@@ -26,24 +26,24 @@ pub enum CellType {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Cell<'a> {
+pub struct Cell {
     name: CellType,
     pub loc: (u32, u32),
-    pub fauna: Option<Fauna<'a>>,
+    pub fauna: Option<Fauna>,
     pub fodder: f32,
     f_max: f32,
 }
 
-impl<'a> Cell<'a> {
+impl<'a> Cell {
     pub fn get_cell(&self) -> CellType {
         self.name.clone()
     }
 
-    pub fn add_herb_struct(&mut self, animal: Herbivore<'a>) {
+    pub fn add_herb_struct(&mut self, animal: Herbivore) {
         self.fauna.as_mut().unwrap().herbivore.push(animal);
     }
 
-    pub fn add_carn_struct(&mut self, animal: Carnivore<'a>) {
+    pub fn add_carn_struct(&mut self, animal: Carnivore) {
         self.fauna.as_mut().unwrap().carnivore.push(animal);
     }
     // example of vec: vec![((1, 1), "Herbivore".to_string(), 200)]
@@ -168,7 +168,7 @@ impl<'a> Cell<'a> {
     //pub fn get_moving_animals(&mut self);
 }
 
-pub fn water(loc: (u32, u32)) -> Cell<'static> {
+pub fn water(loc: (u32, u32)) -> Cell {
     Cell {
         name: CellType::Water,
         loc: (0, 0),
@@ -178,7 +178,7 @@ pub fn water(loc: (u32, u32)) -> Cell<'static> {
     }
 }
 
-pub fn desert(loc: (u32, u32)) -> Cell<'static> {
+pub fn desert(loc: (u32, u32)) -> Cell {
     Cell {
         name: CellType::Desert,
         fauna: Some(Fauna::new()),
@@ -188,7 +188,7 @@ pub fn desert(loc: (u32, u32)) -> Cell<'static> {
     }
 }
 
-pub fn lowland(loc: (u32, u32)) -> Cell<'static> {
+pub fn lowland(loc: (u32, u32)) -> Cell {
     Cell {
         name: CellType::Lowland,
         fauna: Some(Fauna::new()),
@@ -198,7 +198,7 @@ pub fn lowland(loc: (u32, u32)) -> Cell<'static> {
     }
 }
 
-pub fn highland(loc: (u32, u32)) -> Cell<'static> {
+pub fn highland(loc: (u32, u32)) -> Cell {
     Cell {
         name: CellType::Highland,
         fauna: Some(Fauna::new()),
@@ -208,7 +208,7 @@ pub fn highland(loc: (u32, u32)) -> Cell<'static> {
     }
 }
 
-pub fn from_char(c: char) -> Cell<'static> {
+pub fn from_char(c: char) -> Cell {
     match c {
         'W' => Cell {
             name: CellType::Water,

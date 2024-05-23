@@ -17,7 +17,7 @@ mod island_params {
 }
 
 use island_params::ISLAND;
-type MapHashmap<'a> = HashMap<(u32, u32), Cell<'a>>;
+type MapHashmap<'a> = HashMap<(u32, u32), Cell>;
 #[derive(Debug)]
 pub struct Island<'a> {
     raw_str: String,
@@ -84,7 +84,7 @@ impl Island<'_> {
             .collect()
     }
 
-    fn vec_to_map<'a>(map_vec: &Vec<&str>) -> HashMap<(u32, u32), Cell<'a>> {
+    fn vec_to_map<'a>(map_vec: &Vec<&str>) -> HashMap<(u32, u32), Cell> {
         map_vec
             .iter()
             .enumerate()

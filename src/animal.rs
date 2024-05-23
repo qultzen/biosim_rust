@@ -197,19 +197,18 @@ pub trait AnimalTrait {
 }
 
 #[derive(PartialEq, Debug, Clone)]
-pub struct Herbivore<'a> {
+pub struct Herbivore {
     pub species: Species,
-    params: &'a Parameters,
     pub stats: Stats,
 }
 
-impl AnimalTrait for Herbivore<'_> {
+impl AnimalTrait for Herbivore {
     fn stats(&mut self) -> &mut Stats {
         &mut self.stats
     }
 
     fn params(&self) -> &Parameters {
-        &self.params
+        &HERBIVORE
     }
 
     fn species(&self) -> Species {
@@ -217,23 +216,21 @@ impl AnimalTrait for Herbivore<'_> {
     }
 }
 
-impl<'a> Herbivore<'a> {
-    pub fn new() -> Herbivore<'a> {
+impl Herbivore {
+    pub fn new() -> Herbivore {
         let stats = Stats::new_default();
         // update stats.fitness before init
         let mut herb = Herbivore {
             species: Species::Herbivore,
-            params: &HERBIVORE,
             stats: Stats::new_default(),
         };
         herb.update_fitness();
         herb
     }
 
-    pub fn from(stats: Stats) -> Herbivore<'a> {
+    pub fn from(stats: Stats) -> Herbivore {
         let mut herb = Herbivore {
             species: Species::Herbivore,
-            params: &HERBIVORE,
             stats,
         };
 
@@ -265,19 +262,18 @@ impl<'a> Herbivore<'a> {
 }
 
 #[derive(PartialEq, Debug, Clone)]
-pub struct Carnivore<'a> {
+pub struct Carnivore {
     pub species: Species,
-    params: &'a Parameters,
     pub stats: Stats,
 }
 
-impl AnimalTrait for Carnivore<'_> {
+impl AnimalTrait for Carnivore {
     fn stats(&mut self) -> &mut Stats {
         &mut self.stats
     }
 
     fn params(&self) -> &Parameters {
-        &self.params
+        &CARNIVORE
     }
 
     fn species(&self) -> Species {
@@ -285,21 +281,19 @@ impl AnimalTrait for Carnivore<'_> {
     }
 }
 
-impl<'a> Carnivore<'a> {
-    pub fn new() -> Carnivore<'a> {
+impl Carnivore {
+    pub fn new() -> Carnivore {
         let mut carn = Carnivore {
             species: Species::Carnivore,
-            params: &CARNIVORE,
             stats: Stats::new_default(),
         };
         carn.update_fitness();
         carn
     }
 
-    pub fn from(stats: Stats) -> Carnivore<'a> {
+    pub fn from(stats: Stats) -> Carnivore {
         let mut carn = Carnivore {
             species: Species::Carnivore,
-            params: &HERBIVORE,
             stats,
         };
 
@@ -342,7 +336,7 @@ impl<'a> Carnivore<'a> {
                 continue;
             }
 
-            let desired_food = self.params.f - amount_eaten;
+            let desired_food = self.params().f - amount_eaten;
             let eating;
 
             if herbivore.stats.weight > desired_food {
@@ -369,7 +363,6 @@ mod test_creation {
 
         let mut result = Herbivore {
             species: Species::Herbivore,
-            params: &HERBIVORE,
             stats: Stats::new_default(),
         };
         result.update_fitness();
@@ -382,7 +375,6 @@ mod test_creation {
 
         let mut result = Carnivore {
             species: Species::Carnivore,
-            params: &CARNIVORE,
             stats: Stats::new_default(),
         };
         result.update_fitness();
