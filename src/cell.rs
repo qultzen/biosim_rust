@@ -167,15 +167,18 @@ impl<'a> Cell {
 
     pub fn get_moving_animals(
         &self,
-    ) -> (Vec<(&Herbivore, (u32, u32))>, Vec<(&Carnivore, (u32, u32))>) {
+    ) -> (
+        Vec<(&Herbivore, (u32, u32), (u32, u32))>,
+        Vec<(&Carnivore, (u32, u32), (u32, u32))>,
+    ) {
         let mut moving_herbs = Vec::new();
         let mut moving_carns = Vec::new();
-        let mut new_loc: (u32, u32);
+        let current_loc = self.loc.clone();
 
         for herb in self.fauna.as_ref().unwrap().herbivore.iter() {
             if herb.migrate() {
                 if let Some(new_loc) = self.get_random_neighboring_cell() {
-                    moving_herbs.push((herb, new_loc));
+                    moving_herbs.push((herb, current_loc, new_loc));
                 }
             }
         }
@@ -183,7 +186,7 @@ impl<'a> Cell {
         for carn in self.fauna.as_ref().unwrap().carnivore.iter() {
             if carn.migrate() {
                 if let Some(new_loc) = self.get_random_neighboring_cell() {
-                    moving_carns.push((carn, new_loc));
+                    moving_carns.push((carn, current_loc, new_loc));
                 }
             }
         }
