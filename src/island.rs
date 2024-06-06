@@ -1,5 +1,5 @@
 use crate::animal::{AnimalTrait, Carnivore, Herbivore};
-use crate::cell::{Cell, CellType};
+use crate::cell::{Cell, CellType, Fauna};
 use std::{
     collections::HashMap,
     error::Error,
@@ -104,6 +104,20 @@ impl Island<'_> {
             .collect()
     }
 
+    pub fn get_pop(&self) -> (usize, usize) {
+        let mut herb_count = 0;
+        let mut carn_count = 0;
+
+        for (_, cell) in self.map.iter() {
+            if let Some(fauna) = cell.fauna.as_ref() {
+                herb_count += fauna.herbivore.len();
+                carn_count += fauna.carnivore.len();
+            }
+        }
+
+        (herb_count, carn_count)
+    }
+
     pub fn move_all_animals(&mut self, cell: &mut Cell) {
         let mut move_index = Vec::new();
 
@@ -195,6 +209,9 @@ impl Island<'_> {
         let mut moving_carns = Vec::new();
 
         for (coordinate, cell) in self.map.iter_mut() {
+            if (cell.get_cell() == CellType::Water) {
+                continue;
+            }
             cell.add_newborns();
             cell.feed_animals();
             cell.get_moving_animals();
@@ -205,10 +222,25 @@ impl Island<'_> {
             (moving_herbs, moving_carns) = Island::remove_moving_animals(cell);
         }
 
+        moving_herbs.retain(|herb| {
+            let move_to = herb.stats_as_ref().move_to.unwrap();
+            self.map.get(&move_to).unwrap().get_cell() != CellType::Water
+        });
+
+        moving_carns.retain(|carn| {
+            let move_to = carn.stats_as_ref().move_to.unwrap();
+            self.map.get(&move_to).unwrap().get_cell() != CellType::Water
+        });
+
         // move all herbs
         while !moving_herbs.is_empty() {
+            let move_to = moving_herbs.last().unwrap().stats_as_ref().move_to.unwrap();
+
+            if (self.map.get(&move_to).unwrap().get_cell() == CellType::Water) {
+                continue;
+            }
+
             let herb = moving_herbs.pop().unwrap();
-            let move_to = herb.stats_as_ref().move_to.unwrap();
             self.map
                 .get_mut(&move_to)
                 .unwrap()

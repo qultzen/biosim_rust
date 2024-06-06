@@ -193,7 +193,7 @@ impl<'a> Cell {
     }
 
     pub fn add_newborns(&mut self) {
-        let herbs = &mut self.fauna.as_mut().unwrap().herbivore;
+        let herbs = &mut self.fauna.as_mut().expect("FAUNE").herbivore;
         let mut newborns = Vec::new();
 
         let herb_count = herbs.len();
