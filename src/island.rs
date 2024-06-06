@@ -241,28 +241,14 @@ impl Island<'_> {
             }
 
             let herb = moving_herbs.pop().unwrap();
-            self.map
-                .get_mut(&move_to)
-                .unwrap()
-                .fauna
-                .as_mut()
-                .unwrap()
-                .herbivore
-                .push(herb);
+            self.map.get_mut(&move_to).unwrap().add_herb_struct(herb);
         }
 
         // move all carns
         while !moving_carns.is_empty() {
             let carn = moving_carns.pop().unwrap();
             let move_to = carn.stats_as_ref().move_to.unwrap();
-            self.map
-                .get_mut(&move_to)
-                .unwrap()
-                .fauna
-                .as_mut()
-                .unwrap()
-                .carnivore
-                .push(carn);
+            self.map.get_mut(&move_to).unwrap().add_carn_struct(carn);
         }
     }
 }

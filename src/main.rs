@@ -11,12 +11,15 @@ use island::Island;
 fn main() {
     let input_map = "
         WWWW
-        WHLW
+        WLLW
         WLLW
         WWWW"
         .to_string();
 
-    let input_pop = vec![((1, 1), "Herbivore".to_string(), 200)];
+    let input_pop = vec![
+        ((1, 1), "Herbivore".to_string(), 80),
+        ((1, 1), "Carnivore".to_string(), 1),
+    ];
 
     let mut island = Island::build(&input_map).unwrap();
 
