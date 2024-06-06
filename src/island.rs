@@ -149,16 +149,52 @@ impl Island<'_> {
                 .push(carn);
         }
     }
+    pub fn remove_moving_animals(cell: &mut Cell) -> (Vec<Herbivore>, Vec<Carnivore>) {
+        // removing herbs
+        let mut move_index = Vec::new();
+
+        for (i, herb) in cell.fauna.as_ref().unwrap().herbivore.iter().enumerate() {
+            if let Some(_) = herb.stats_as_ref().move_to {
+                move_index.push(i);
+            }
+        }
+        // sort move_index in reverse
+        move_index.sort_by(|a, b| b.cmp(a));
+        let mut moving_herbs = Vec::new();
+
+        for i in move_index {
+            moving_herbs.push(cell.fauna.as_mut().unwrap().herbivore.remove(i));
+        }
+
+        // removing carns
+        let mut move_index = Vec::new();
+
+        for (i, carn) in cell.fauna.as_ref().unwrap().carnivore.iter().enumerate() {
+            if let Some(_) = carn.stats_as_ref().move_to {
+                move_index.push(i);
+            }
+        }
+
+        move_index.sort_by(|a, b| b.cmp(a));
+        let mut moving_carns = Vec::new();
+
+        for i in move_index {
+            moving_carns.push(cell.fauna.as_mut().unwrap().carnivore.remove(i));
+        }
+
+        (moving_herbs, moving_carns)
+    }
 
     pub fn yearly_cycle(&mut self) {
         //instead of looping through all the cells here, to it in the individual methods.
-        let cells: Vec<_> = self.map.values_mut().collect();
+        //let cells: Vec<_> = self.map.values_mut().collect();
 
         let coordinates: Vec<_> = self.map.keys().map(|&x| x.clone()).collect();
 
-        for coordinate in coordinates {
-            let cell = self.map.get_mut(&coordinate).unwrap();
+        let mut moving_herbs = Vec::new();
+        let mut moving_carns = Vec::new();
 
+        for (coordinate, cell) in self.map.iter_mut() {
             cell.add_newborns();
             cell.feed_animals();
             cell.get_moving_animals();
@@ -166,7 +202,35 @@ impl Island<'_> {
             cell.loss_of_weight();
             cell.animal_death();
             cell.reset_fodder();
-            self.move_all_animals(cell);
+            (moving_herbs, moving_carns) = Island::remove_moving_animals(cell);
+        }
+
+        // move all herbs
+        while !moving_herbs.is_empty() {
+            let herb = moving_herbs.pop().unwrap();
+            let move_to = herb.stats_as_ref().move_to.unwrap();
+            self.map
+                .get_mut(&move_to)
+                .unwrap()
+                .fauna
+                .as_mut()
+                .unwrap()
+                .herbivore
+                .push(herb);
+        }
+
+        // move all carns
+        while !moving_carns.is_empty() {
+            let carn = moving_carns.pop().unwrap();
+            let move_to = carn.stats_as_ref().move_to.unwrap();
+            self.map
+                .get_mut(&move_to)
+                .unwrap()
+                .fauna
+                .as_mut()
+                .unwrap()
+                .carnivore
+                .push(carn);
         }
     }
 }
